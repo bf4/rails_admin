@@ -120,7 +120,7 @@ module RailsAdmin
     end
 
     def get_collection(model_config, scope, pagination)
-      associations = model_config.list.fields.select { |f| f.type.in?([:belongs_to_association, :has_one_association, :has_many_association]) && !f.polymorphic? }.collect { |f| f.association.name }
+      associations = get_associations_for_collection(model_config)
       options = {}
       options = options.merge(page: (params[Kaminari.config.param_name] || 1).to_i, per: (params[:per] || model_config.list.items_per_page)) if pagination
       options = options.merge(include: associations) unless associations.blank?
@@ -129,6 +129,10 @@ module RailsAdmin
       options = options.merge(filters: params[:f]) if params[:f].present?
       options = options.merge(bulk_ids: params[:bulk_ids]) if params[:bulk_ids]
       model_config.abstract_model.all(options, scope)
+    end
+
+    def get_associations_for_collection(model_config)
+      model_config.list.fields.select { |f| f.type == :belongs_to_association && !f.polymorphic? }.collect { |f| f.association.name }
     end
 
     def get_association_scope_from_params
